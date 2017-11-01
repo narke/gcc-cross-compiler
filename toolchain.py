@@ -43,14 +43,14 @@ import subprocess
 
 
 # Toolchain versions
-BINUTILS_VERSION = '2.26'
+BINUTILS_VERSION = '2.29'
 BINUTILS_RELEASE = ''
-GCC_VERSION = '6.1.0'
-GDB_VERSION = '7.11'
+GCC_VERSION = '7.2.0'
+GDB_VERSION = '8.0.1'
 
 BASEDIR = os.getcwd()
 BINUTILS = 'binutils-{0}{1}.tar.bz2'.format(BINUTILS_VERSION, BINUTILS_RELEASE)
-GCC = 'gcc-{}.tar.bz2'.format(GCC_VERSION)
+GCC = 'gcc-{}.tar.gz'.format(GCC_VERSION)
 GDB = 'gdb-{}.tar.gz'.format(GDB_VERSION)
 
 REAL_INSTALL = True
@@ -61,9 +61,9 @@ BINUTILS_SOURCE = 'ftp://ftp.gnu.org/gnu/binutils/'
 GCC_SOURCE = 'ftp://ftp.gnu.org/gnu/gcc/gcc-{}/'.format(GCC_VERSION)
 GDB_SOURCE = 'ftp://ftp.gnu.org/gnu/gdb/'
 
-BINUTILS_CHECKSUM = '64146a0faa3b411ba774f47d41de239f'
-GCC_CHECKSUM = '8fb6cb98b8459f5863328380fbf06bd1'
-GDB_CHECKSUM = 'f585059252836a981ea5db9a5f8ce97f'
+BINUTILS_CHECKSUM = '23733a26c8276edbb1168c9bee60e40e'
+GCC_CHECKSUM = '2e4be17c604ea555e0dff4a8f81ffe44'
+GDB_CHECKSUM = 'bb45869f8126a84ea2ba13a8c0e7c90e'
 
 GMP_MAIN = """
 #define GCC_GMP_VERSION_NUM(a, b, c) \

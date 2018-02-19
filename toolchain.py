@@ -403,7 +403,7 @@ if __name__ == '__main__':
         TARGET_PLATFORM = sys.argv[2]
 
     if TARGET_PLATFORM not in TARGETS.keys():
-        print('Unsopported architecure: {}'.format(TARGET_PLATFORM))
+        print('Unsupported architecure: {}'.format(TARGET_PLATFORM))
         print('Choose one of: {}'.format([arch for arch in TARGETS.keys()]))
         sys.exit()
 

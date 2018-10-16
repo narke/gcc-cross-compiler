@@ -91,17 +91,19 @@ ISL_MAIN = """
 isl_ctx_get_max_operations (isl_ctx_alloc ());
 """
 
-TARGETS = {'amd64': 'amd64-linux-gnu',
-           'arm32': 'arm-linux-gnueabi',
-           'ia32': 'i686-pc-linux-gnu',
-           'ia64': 'ia64-pc-linux-gnu',
-           'mips32': 'mipsel-linux-gnu',
-           'mips32eb': 'mips-linux-gnu',
-           'mips64': 'mips64el-linux-gnu',
-           'ppc32': 'ppc-linux-gnu',
-           'ppc64': 'ppc64-linux-gnu',
-           'sparc32': 'sparc-leon3-linux-gnu',
-           'sparc64': 'sparc64-linux-gnu'}
+TARGETS = {
+    'amd64': 'amd64-linux-gnu',
+    'arm32': 'arm-linux-gnueabi',
+    'ia32': 'i686-pc-linux-gnu',
+    'ia64': 'ia64-pc-linux-gnu',
+    'mips32': 'mipsel-linux-gnu',
+    'mips32eb': 'mips-linux-gnu',
+    'mips64': 'mips64el-linux-gnu',
+    'ppc32': 'ppc-linux-gnu',
+    'ppc64': 'ppc64-linux-gnu',
+    'sparc32': 'sparc-leon3-linux-gnu',
+    'sparc64': 'sparc64-linux-gnu'
+}
 
 
 def check_header(dependency, header, body):

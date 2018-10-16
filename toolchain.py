@@ -1,44 +1,44 @@
 #!/usr/bin/env python3
-""" Make a cross-compiler."""
+""" Cross-compiler toolchain build script
 
-#
-# Copyright (c) 2016 Konstantin Tcholokachvili
+    Possible target platforms are:
+     amd64      AMD64 (x86-64, x64)
+     arm32      ARM
+     ia32       IA-32 (x86, i386)
+     ia64       IA-64 (Itanium)
+     mips32     MIPS little-endian 32b
+     mips32eb   MIPS big-endian 32b
+     mips64     MIPS little-endian 64b
+     ppc32      32-bit PowerPC
+     ppc64      64-bit PowerPC
+     sparc32    SPARC V8
+     sparc64    SPARC V9
+
+    The toolchain is installed into directory specified by the
+    CROSS_PREFIX environment variable. If the variable is not
+    defined, /usr/local/cross/ is used as default.
+
+    If '--install no' is present, the toolchain still uses the
+    CROSS_PREFIX as the target directory but the installation
+    copies the files into PKG/ subdirectory without affecting
+    the actual root file system. That is only useful if you do
+    not want to run the script under the super user."""
+
+# Copyright (c) 2016, 2018 Konstantin Tcholokachvili
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# - Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-# - Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in the
-#   documentation and/or other materials provided with the distribution.
-# - The name of the author may not be used to endorse or promote products
-#   derived from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
 #
 # Credits:
 # This script is inspired by toolchain.sh made by Martin Decky for HelenOS
 # project.
-#
 
 import os
 import sys
 import hashlib
 import tempfile
+import argparse
 import subprocess
 
 
@@ -53,9 +53,7 @@ BINUTILS = 'binutils-{0}{1}.tar.bz2'.format(BINUTILS_VERSION, BINUTILS_RELEASE)
 GCC = 'gcc-{}.tar.gz'.format(GCC_VERSION)
 GDB = 'gdb-{}.tar.gz'.format(GDB_VERSION)
 
-REAL_INSTALL = True
 INSTALL_DIR = BASEDIR + '/PKG'
-TARGET_PLATFORM = ''
 
 BINUTILS_SOURCE = 'ftp://ftp.gnu.org/gnu/binutils/'
 GCC_SOURCE = 'ftp://ftp.gnu.org/gnu/gcc/gcc-{}/'.format(GCC_VERSION)
@@ -167,7 +165,7 @@ def download(url, archive):
     """Downlaod a source archive with wget."""
     if not os.path.isfile(archive):
         try:
-            subprocess.call(['wget', '-c', url+archive])
+            subprocess.check_call(['wget', '-c', url+archive])
         except subprocess.CalledProcessError:
             print('Error: Download of {} failed'.format(archive))
             sys.exit()
@@ -195,16 +193,16 @@ def prepare():
     check_integrity(GDB, GDB_CHECKSUM)
 
 
-def set_target_from_platform():
+def set_target_from_platform(platform):
     """Sets the triplet *-linux-* as target."""
-    return TARGETS[TARGET_PLATFORM]
+    return TARGETS[platform]
 
 
 def cleanup_dir(path):
     """Remove a directory ecursively."""
     if os.path.isdir(path):
         try:
-            subprocess.call(['rm', '-rf', path])
+            subprocess.check_call(['rm', '-rf', path])
         except subprocess.CalledProcessError:
             print('Error: Problem while removing {}'.format(path))
             sys.exit()
@@ -214,7 +212,8 @@ def create_dir(path):
     """Create a directory within a given path."""
     if not os.path.isdir(path):
         try:
-            subprocess.call(['mkdir', '-p', path])
+            print(path)
+            subprocess.check_call(['mkdir', '-p', path])
         except subprocess.CalledProcessError:
             print('Error: Problem while creating {}'.format(path))
             sys.exit()
@@ -231,19 +230,23 @@ def unpack_tarball(tarball):
         print('Error: Unsupported extension')
         sys.exit()
 
-    subprocess.call(['tar', flags[extension], tarball])
+    try:
+        subprocess.check_call(['tar', flags[extension], tarball])
+    except subprocess.CalledProcessError:
+        print('Error: cannot untar')
+        sys.exit()
 
 
-def cleanup_previous_build(prefix, work_directory, obj_directory):
+def cleanup_previous_build(install, prefix, work_directory, obj_directory):
     """Remove files from the previous build."""
 
     print('>>> Removing previous content')
-    if REAL_INSTALL:
+    if install:
         cleanup_dir(prefix)
     cleanup_dir(work_directory)
     create_dir(work_directory)
 
-    if REAL_INSTALL:
+    if install:
         create_dir(prefix)
     create_dir(obj_directory)
 
@@ -259,154 +262,169 @@ def unpack_tarballs(work_directory):
     unpack_tarball(BASEDIR + '/' + GDB)
 
 
-def build_binutils(binutils_directory, target, prefix):
+def build_binutils(install, nb_cores, binutils_directory, target, prefix):
     """Build binutils."""
 
     os.chdir(binutils_directory)
 
-    subprocess.call(['./configure', '--target={}'.format(target),
-                     '--prefix={}'.format(prefix),
-                     '--program-prefix={}-'.format(target),
-                     '--disable-nls', '--disable-werror'])
+    try:
+        subprocess.check_call(['./configure', '--target={}'.format(target),
+                        '--prefix={}'.format(prefix),
+                        '--program-prefix={}-'.format(target),
+                        '--disable-nls', '--disable-werror'])
+    except subprocess.CalledProcessError:
+        print('Error: binutils headers checking failed')
+        sys.exit()
+
     os.environ['CFLAGS'] = '-Wno-error'
-    subprocess.call(['make', 'all'])
+    try:
+        subprocess.check_call(['make', '-j', str(nb_cores), 'all'])
+    except subprocess.CalledProcessError:
+        print('Error: binutils compilation failed')
+        sys.exit()
 
-    if REAL_INSTALL:
-        subprocess.call(['make', 'install'])
+    if install:
+        cmd = ['make', 'install']
     else:
-        subprocess.call(['make', 'install', 'DESTDIR={}'.format(INSTALL_DIR)])
+        cmd = ['make', 'install', 'DESTDIR={}'.format(INSTALL_DIR)]
+
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        print('Error: binutils installation failed ')
+        sys.exit()
 
 
-def build_gcc(obj_directory, prefix, gcc_directory, target):
+def build_gcc(install, nb_cores, obj_directory, prefix, gcc_directory, target):
     """Build GCC."""
 
     os.chdir(obj_directory)
 
-    subprocess.call(['{}/configure'.format(gcc_directory),
-                     '--target={}'.format(target),
-                     '--prefix={}'.format(prefix),
-                     '--program-prefix={}-'.format(target),
-                     '--with-gnu-as', '--with-gnu-ld', '--disable-nls',
-                     '--disable-threads', '--enable-languages=c',
-                     '--disable-multilib', '--disable-libgcj',
-                     '--without-headers', '--disable-shared', '--enable-lto',
-                     '--disable-werror'])
+    try:
+        subprocess.check_call(['{}/configure'.format(gcc_directory),
+                               '--target={}'.format(target),
+                               '--prefix={}'.format(prefix),
+                               '--program-prefix={}-'.format(target),
+                               '--with-gnu-as', '--with-gnu-ld', '--disable-nls',
+                               '--disable-threads', '--enable-languages=c',
+                               '--disable-multilib', '--disable-libgcj',
+                               '--without-headers', '--disable-shared', '--enable-lto',
+                               '--disable-werror'])
+    except subprocess.CalledProcessError:
+        print('Error: gcc headers checking failed')
+        sys.exit()
 
-    subprocess.call(['make', 'all-gcc'])
+    try:
+        subprocess.check_call(['make', '-j', str(nb_cores), 'all-gcc'])
+    except subprocess.CalledProcessError:
+        print('Error: gcc compilation failed')
+        sys.exit()
 
-    if REAL_INSTALL:
-        subprocess.call(['make', 'install-gcc'])
+    if install:
+        cmd = ['make', 'install-gcc']
     else:
-        subprocess.call(['make', 'install-gcc', 'DESTDIR={}'.format(INSTALL_DIR)])
+        cmd = ['make', 'install-gcc', 'DESTDIR={}'.format(INSTALL_DIR)]
+
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        print('Error: gcc installation failed')
+        sys.exit()
 
 
-def build_gdb(gdb_directory, target, prefix):
+def build_gdb(install, nb_cores, gdb_directory, target, prefix):
     """Build GDB."""
 
     os.chdir(gdb_directory)
 
-    subprocess.call(['./configure', '--target={}'.format(target),
-                     '--prefix={}'.format(prefix),
-                     '--program-prefix={}-'.format(target),
-                     '--enable-werror=no'])
+    try:
+        subprocess.check_call(['./configure', '--target={}'.format(target),
+                               '--prefix={}'.format(prefix),
+                               '--program-prefix={}-'.format(target),
+                               '--enable-werror=no'])
+    except subprocess.CalledProcessError:
+        print('Error: gdb headers checking failed')
+        sys.exit()
 
-    subprocess.call(['make', 'all'])
+    try:
+        subprocess.check_call(['make', '-j', str(nb_cores), 'all'])
+    except subprocess.CalledProcessError:
+        print('Error: gdb compilation failed')
+        sys.exit()
 
-    if REAL_INSTALL:
-        subprocess.call(['make', 'install'])
+    if install:
+        cmd = ['make', 'install']
     else:
-        subprocess.call(['make', 'install', 'DESTDIR={}'.format(INSTALL_DIR)])
+        cmd = ['make', 'install', 'DESTDIR={}'.format(INSTALL_DIR)]
+
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        print('Error: gdb installatior failed')
+        sys.exit()
 
 
-def build_target():
+def build_target(platform, install, nb_cores):
     """Cross-compile gcc toolchain for a given architecture."""
 
-    work_directory = BASEDIR + '/' + TARGET_PLATFORM
+    work_directory = BASEDIR + '/' + platform
     binutils_directory = work_directory + '/binutils-' + BINUTILS_VERSION
     gcc_directory = work_directory + '/gcc-' + GCC_VERSION
     obj_directory = work_directory + '/gcc-obj'
     gdb_directory = work_directory + '/gdb-' + GDB_VERSION
 
-    target = set_target_from_platform()
+    target = set_target_from_platform(platform)
 
     if os.environ.get('CROSS_PREFIX'):
         cross_prefix = os.environ['CROSS_PREFIX']
     else:
         cross_prefix = '/usr/local/cross/'
 
-    prefix = cross_prefix + TARGET_PLATFORM
+    prefix = cross_prefix + platform
 
     os.environ['PATH'] += ':{0}{1}/bin'.format(INSTALL_DIR, prefix)
     os.environ['PATH'] += ':{0}/bin'.format(prefix)
 
-    cleanup_previous_build(prefix, work_directory, obj_directory)
+    cleanup_previous_build(install, prefix, work_directory, obj_directory)
     unpack_tarballs(work_directory)
 
-    build_binutils(binutils_directory, target, prefix)
-    build_gcc(obj_directory, prefix, gcc_directory, target)
-    build_gdb(gdb_directory, target, prefix)
+    build_binutils(install, nb_cores, binutils_directory, target, prefix)
+    build_gcc(install, nb_cores,  obj_directory, prefix, gcc_directory, target)
+    build_gdb(install, nb_cores, gdb_directory, target, prefix)
 
     os.chdir(BASEDIR)
     print('>>> Cleaning up')
     cleanup_dir(work_directory)
 
-    print('>>> Cross-compiler for {} installed.'.format(TARGET_PLATFORM))
-
-
-def show_usage(program_name):
-    """Show usage."""
-
-    usage = """
-    Cross-compiler toolchain build script
-
-    Syntax:
-     {0} [--no-install] <platform>
-
-    Possible target platforms are:
-     amd64      AMD64 (x86-64, x64)
-     arm32      ARM
-     ia32       IA-32 (x86, i386)
-     ia64       IA-64 (Itanium)
-     mips32     MIPS little-endian 32b
-     mips32eb   MIPS big-endian 32b
-     mips64     MIPS little-endian 64b
-     ppc32      32-bit PowerPC
-     ppc64      64-bit PowerPC
-     sparc32    SPARC V8
-     sparc64    SPARC V9
-
-    The toolchain is installed into directory specified by the
-    CROSS_PREFIX environment variable. If the variable is not
-    defined, /usr/local/cross/ is used as default.
-
-    If --no-install is present, the toolchain still uses the
-    CROSS_PREFIX as the target directory but the installation
-    copies the files into PKG/ subdirectory without affecting
-    the actual root file system. That is only useful if you do
-    not want to run the script under the super user.""".format(program_name)
-
-    print(usage)
-
 
 if __name__ == '__main__':
-    if len(sys.argv) not in (2, 3):
-        show_usage(sys.argv[0])
-        sys.exit()
-    elif len(sys.argv) == 2:
-        TARGET_PLATFORM = sys.argv[1]
-    elif len(sys.argv) == 3:
-        if sys.argv[1] == '--no-install':
-            REAL_INSTALL = False
-        else:
-            show_usage(sys.argv[0])
-            sys.exit()
-        TARGET_PLATFORM = sys.argv[2]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--arch',
+                        help='Target architecture',
+                        type=str,
+                        choices=['amd64', 'arm32', 'ia32', 'ia64', 'mips32',
+                                 'mips32eb' ,'mips64', 'ppc32', 'ppc64',
+                                 'sparc32', 'sparc64'],
+                        required=True)
+    parser.add_argument('-i', '--install',
+                        help='Install in /usr/local/cross or just '
+                        'keep cross-compiled binaries into the build directory',
+                        type=str,
+                        choices=['yes', 'no'],
+                        required=True)
+    parser.add_argument('-c', '--cores',
+                        help='Number of CPU cores',
+                        type=int, required=False, default=1)
 
-    if TARGET_PLATFORM not in TARGETS.keys():
-        print('Unsupported architecure: {}'.format(TARGET_PLATFORM))
-        print('Choose one of: {}'.format([arch for arch in TARGETS.keys()]))
-        sys.exit()
+    args = parser.parse_args()
+
+    platform = args.arch
+    install = True if args.install == 'yes' else False
+    nb_cores = args.cores - 1
 
     check_headers()
     prepare()
-    build_target()
+    build_target(platform, install, nb_cores)
+
+    msg = 'installed' if args.install == 'yes' else 'built'
+    print('>>> Cross-compiler for {} is now {}.'.format(platform, msg))

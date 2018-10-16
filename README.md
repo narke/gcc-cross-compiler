@@ -2,10 +2,7 @@
 
 Supported architectures:
 
-    narke@vemst ~/P/gcc-cross-compiler> ./toolchain.py 
         Cross-compiler toolchain build script
-        Syntax:
-         ./toolchain.py [--no-install] <platform>
         Possible target platforms are:
          amd64      AMD64 (x86-64, x64)
          arm32      ARM
@@ -23,7 +20,7 @@ Supported architectures:
         CROSS_PREFIX environment variable. If the variable is not
         defined, /usr/local/cross/ is used as default.
         
-        If --no-install is present, the toolchain still uses the
+        If '--install no' is present, the toolchain still uses the
         CROSS_PREFIX as the target directory but the installation
         copies the files into PKG/ subdirectory without affecting
         the actual root file system. That is only useful if you do
@@ -31,11 +28,11 @@ Supported architectures:
 
 Build a cross-compiler for 32-bit PowerPC without installing:
 
-     ./toolchain.py --no-install ppc32
+     ./toolchain.py --arch ppc32 --install no --cores 4
 
 Build and install a cross-compiler for 32-bit ARM (default install directory is
 /usr/local/cross, specify another one by exporting CROSS_PREFIX environment
 variable):
 
-     ./toolchain.py arm32
+     ./toolchain.py --arch arm32 --install yes
     

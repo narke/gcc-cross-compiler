@@ -39,7 +39,6 @@ variable), note that you need 'sudo' to install:
      sudo ./toolchain.py --arch arm32 --install yes
     
 
-# Dependencies to install on Debian-based distros:
+# Dependencies to install on Debian-based distros
 
-    apt install sed flex bison gzip gettext zlib texinfo libelf-dev libgomp1 \
-    make tar libgmp-dev libmpfr-dev libmpc-dev libisl-dev build-essential
+    apt install sed flex bison gzip gettext zlib texinfo libelf-dev libgomp1 make tar libgmp-dev libmpfr-dev libmpc-dev libisl-dev build-essential

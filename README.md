@@ -26,13 +26,20 @@ Supported architectures:
         the actual root file system. That is only useful if you do
         not want to run the script under the super user.
 
-Build a cross-compiler for 32-bit PowerPC without installing:
+# Building
+
+Build a cross-compiler for 32-bit PowerPC using 4 cores without installing:
 
      ./toolchain.py --arch ppc32 --install no --cores 4
 
 Build and install a cross-compiler for 32-bit ARM (default install directory is
 /usr/local/cross, specify another one by exporting CROSS_PREFIX environment
-variable):
+variable), note that you need 'sudo' to install:
 
-     ./toolchain.py --arch arm32 --install yes
+     sudo ./toolchain.py --arch arm32 --install yes
     
+
+# Dependencies to install on Debian-based distros:
+
+    apt install sed flex bison gzip gettext zlib texinfo libelf-dev libgomp1 \
+    make tar libgmp-dev libmpfr-dev libmpc-dev libisl-dev build-essential

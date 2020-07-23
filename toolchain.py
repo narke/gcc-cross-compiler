@@ -43,15 +43,15 @@ import subprocess
 
 
 # Toolchain versions
-BINUTILS_VERSION = '2.32'
+BINUTILS_VERSION = '2.34'
 BINUTILS_RELEASE = ''
-GCC_VERSION = '9.1.0'
-GDB_VERSION = '8.2'
+GCC_VERSION = '10.2.0'
+GDB_VERSION = '9.2'
 
 BASEDIR = os.getcwd()
-BINUTILS = 'binutils-{0}{1}.tar.bz2'.format(BINUTILS_VERSION, BINUTILS_RELEASE)
-GCC = 'gcc-{}.tar.gz'.format(GCC_VERSION)
-GDB = 'gdb-{}.tar.gz'.format(GDB_VERSION)
+BINUTILS = 'binutils-{0}{1}.tar.xz'.format(BINUTILS_VERSION, BINUTILS_RELEASE)
+GCC = 'gcc-{}.tar.xz'.format(GCC_VERSION)
+GDB = 'gdb-{}.tar.xz'.format(GDB_VERSION)
 
 INSTALL_DIR = BASEDIR + '/PKG'
 
@@ -59,9 +59,9 @@ BINUTILS_SOURCE = 'ftp://ftp.gnu.org/gnu/binutils/'
 GCC_SOURCE = 'ftp://ftp.gnu.org/gnu/gcc/gcc-{}/'.format(GCC_VERSION)
 GDB_SOURCE = 'ftp://ftp.gnu.org/gnu/gdb/'
 
-BINUTILS_CHECKSUM = '64f8ea283e571200f8b2b7f66fe8a0d6'
-GCC_CHECKSUM = '21cda7bbe39c95d0e81694433608a7be'
-GDB_CHECKSUM = '0783c6d86775c5aff06cccc8a3d7cad8'
+BINUTILS_CHECKSUM = '664ec3a2df7805ed3464639aaae332d6'
+GCC_CHECKSUM = 'e9fd9b1789155ad09bcf3ae747596b50'
+GDB_CHECKSUM = 'db95524e554870209ab7d9f8fd8dc557'
 
 GMP_MAIN = """
 #define GCC_GMP_VERSION_NUM(a, b, c) \

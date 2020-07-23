@@ -24,7 +24,7 @@
     the actual root file system. That is only useful if you do
     not want to run the script under the super user."""
 
-# Copyright (c) 2016, 2018, 2019 Konstantin Tcholokachvili
+# Copyright (c) 2016-2020 Konstantin Tcholokachvili
 # All rights reserved.
 #
 # Use of this source code is governed by a BSD-style license that can be
@@ -36,6 +36,7 @@
 
 import os
 import sys
+import tarfile
 import hashlib
 import tempfile
 import argparse
@@ -44,12 +45,11 @@ import subprocess
 
 # Toolchain versions
 BINUTILS_VERSION = '2.34'
-BINUTILS_RELEASE = ''
 GCC_VERSION = '10.2.0'
 GDB_VERSION = '9.2'
 
 BASEDIR = os.getcwd()
-BINUTILS = 'binutils-{0}{1}.tar.xz'.format(BINUTILS_VERSION, BINUTILS_RELEASE)
+BINUTILS = 'binutils-{}.tar.xz'.format(BINUTILS_VERSION)
 GCC = 'gcc-{}.tar.xz'.format(GCC_VERSION)
 GDB = 'gdb-{}.tar.xz'.format(GDB_VERSION)
 
@@ -223,20 +223,8 @@ def create_dir(path):
 
 def unpack_tarball(tarball):
     """Extract file from a tarball."""
-
-    flags = {'.gz': 'xzf', '.xz': 'xJf', '.bz2': 'xjf'}
-
-    _, extension = os.path.splitext(tarball)
-
-    if extension not in flags.keys():
-        print('Error: Unsupported extension')
-        sys.exit()
-
-    try:
-        subprocess.check_call(['tar', flags[extension], tarball])
-    except subprocess.CalledProcessError:
-        print('Error: cannot untar')
-        sys.exit()
+    with tarfile.open(tarball) as tar:
+        tar.extractall('.')
 
 
 def cleanup_previous_build(install, prefix, work_directory, obj_directory):

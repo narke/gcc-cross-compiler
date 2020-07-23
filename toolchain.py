@@ -271,9 +271,9 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
 
     try:
         subprocess.check_call(['./configure', '--target={}'.format(target),
-                        '--prefix={}'.format(prefix),
-                        '--program-prefix={}-'.format(target),
-                        '--disable-nls', '--disable-werror'])
+                               '--prefix={}'.format(prefix),
+                               '--program-prefix={}-'.format(target),
+                               '--disable-nls', '--disable-werror'])
     except subprocess.CalledProcessError:
         print('Error: binutils headers checking failed')
         sys.exit()
@@ -391,7 +391,7 @@ def build_target(platform, install, nb_cores):
     unpack_tarballs(work_directory)
 
     build_binutils(install, nb_cores, binutils_directory, target, prefix)
-    build_gcc(install, nb_cores,  obj_directory, prefix, gcc_directory, target)
+    build_gcc(install, nb_cores, obj_directory, prefix, gcc_directory, target)
     build_gdb(install, nb_cores, gdb_directory, target, prefix)
 
     os.chdir(BASEDIR)
@@ -405,7 +405,7 @@ if __name__ == '__main__':
                         help='Target architecture',
                         type=str,
                         choices=['amd64', 'arm32', 'ia32', 'ia64', 'mips32',
-                                 'mips32eb' ,'mips64', 'ppc32', 'ppc64',
+                                 'mips32eb', 'mips64', 'ppc32', 'ppc64',
                                  'sparc32', 'sparc64'],
                         required=True)
     parser.add_argument('-i', '--install',
@@ -420,13 +420,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    platform = args.arch
-    install = True if args.install == 'yes' else False
-    nb_cores = args.cores - 1
+    target_platform = args.arch
+    INSTALL = args.install == 'yes'
+    nb_cpu_cores = args.cores - 1
 
     check_headers()
     prepare()
-    build_target(platform, install, nb_cores)
+    build_target(target_platform, INSTALL, nb_cpu_cores)
 
-    msg = 'installed' if args.install == 'yes' else 'built'
-    print('>>> Cross-compiler for {} is now {}.'.format(platform, msg))
+    MSG = 'installed' if args.install == 'yes' else 'built'
+    print('>>> Cross-compiler for {} is now {}.'.format(target_platform, MSG))

@@ -36,6 +36,7 @@
 
 import os
 import sys
+import ftplib
 import tarfile
 import hashlib
 import tempfile
@@ -49,15 +50,11 @@ GCC_VERSION = '10.2.0'
 GDB_VERSION = '9.2'
 
 BASEDIR = os.getcwd()
-BINUTILS = 'binutils-{}.tar.xz'.format(BINUTILS_VERSION)
-GCC = 'gcc-{}.tar.xz'.format(GCC_VERSION)
-GDB = 'gdb-{}.tar.xz'.format(GDB_VERSION)
+BINUTILS_TARBALL = 'binutils-{}.tar.xz'.format(BINUTILS_VERSION)
+GCC_TARBALL = 'gcc-{}.tar.xz'.format(GCC_VERSION)
+GDB_TARBALL = 'gdb-{}.tar.xz'.format(GDB_VERSION)
 
 INSTALL_DIR = BASEDIR + '/PKG'
-
-BINUTILS_SOURCE = 'ftp://ftp.gnu.org/gnu/binutils/'
-GCC_SOURCE = 'ftp://ftp.gnu.org/gnu/gcc/gcc-{}/'.format(GCC_VERSION)
-GDB_SOURCE = 'ftp://ftp.gnu.org/gnu/gdb/'
 
 BINUTILS_CHECKSUM = '664ec3a2df7805ed3464639aaae332d6'
 GCC_CHECKSUM = 'e9fd9b1789155ad09bcf3ae747596b50'
@@ -163,14 +160,19 @@ def show_dependencies():
     print(message)
 
 
-def download(url, archive):
-    """Downlaod a source archive with wget."""
-    if not os.path.isfile(archive):
-        try:
-            subprocess.check_call(['wget', '-c', url+archive])
-        except subprocess.CalledProcessError:
-            print('Error: Download of {} failed'.format(archive))
-            sys.exit()
+def download(toolname, tarball):
+    """Downlaod a source archive."""
+    try:
+        ftp = ftplib.FTP('ftp.gnu.org')
+        ftp.login()
+        path = '/gnu/gcc/gcc-{}/'.format(GCC_VERSION) if toolname == 'gcc' else '/gnu/{}/'.format(toolname)
+        ftp.cwd(path)
+        with open('{}'.format(tarball), 'wb') as fp:
+            ftp.retrbinary('RETR {}'.format(tarball), fp.write)
+        ftp.quit()
+    except ftplib.all_errors:
+        print('Error: Downoad of {} failed'.format(tarball))
+        sys.exit()
 
 
 def check_integrity(archive, checksum):
@@ -185,14 +187,29 @@ def prepare():
     """Prepare the compilation: get the sources and check their integrity."""
     show_dependencies()
 
-    download(BINUTILS_SOURCE, BINUTILS)
-    check_integrity(BINUTILS, BINUTILS_CHECKSUM)
+    tools = {
+        'binutils':
+        {
+            'tarball': BINUTILS_TARBALL,
+            'checksum': BINUTILS_CHECKSUM
+        },
+        'gcc':
+        {
+            'tarball': GCC_TARBALL,
+            'checksum': GCC_CHECKSUM
+        },
+        'gdb':
+        {
+            'tarball': GDB_TARBALL,
+            'checksum': GDB_CHECKSUM
+        }
+    }
 
-    download(GCC_SOURCE, GCC)
-    check_integrity(GCC, GCC_CHECKSUM)
-
-    download(GDB_SOURCE, GDB)
-    check_integrity(GDB, GDB_CHECKSUM)
+    for toolname in tools:
+        if not os.path.isfile(tools[toolname]['tarball']):
+            download(toolname, tools[toolname]['tarball'])
+            check_integrity(tools[toolname]['tarball'],
+                            tools[toolname]['checksum'])
 
 
 def set_target_from_platform(platform):
@@ -247,9 +264,9 @@ def unpack_tarballs(work_directory):
     print('>>> Unpacking tarballs')
     os.chdir(work_directory)
 
-    unpack_tarball(BASEDIR + '/' + BINUTILS)
-    unpack_tarball(BASEDIR + '/' + GCC)
-    unpack_tarball(BASEDIR + '/' + GDB)
+    unpack_tarball(BASEDIR + '/' + BINUTILS_TARBALL)
+    unpack_tarball(BASEDIR + '/' + GCC_TARBALL)
+    unpack_tarball(BASEDIR + '/' + GDB_TARBALL)
 
 
 def build_binutils(install, nb_cores, binutils_directory, target, prefix):

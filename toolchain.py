@@ -164,13 +164,17 @@ def show_dependencies():
 
 def download(toolname, tarball):
     """Downlaod a source archive."""
+    if toolname == 'gcc':
+        path = '/gnu/gcc/gcc-{}/'.format(GCC_VERSION)
+    else:
+        path = '/gnu/{}/'.format(toolname)
+
     try:
         ftp = ftplib.FTP('ftp.gnu.org')
         ftp.login()
-        path = '/gnu/gcc/gcc-{}/'.format(GCC_VERSION) if toolname == 'gcc' else '/gnu/{}/'.format(toolname)
         ftp.cwd(path)
-        with open('{}'.format(tarball), 'wb') as fp:
-            ftp.retrbinary('RETR {}'.format(tarball), fp.write)
+        with open('{}'.format(tarball), 'wb') as ftpfile:
+            ftp.retrbinary('RETR {}'.format(tarball), ftpfile.write)
         ftp.quit()
     except ftplib.all_errors:
         print('Error: Downoad of {} failed'.format(tarball))
@@ -296,8 +300,10 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
         sys.exit()
 
 
-def build_gcc(install, nb_cores, obj_directory, prefix, gcc_directory, target):
+def build_gcc(*args):
     """Build GCC."""
+
+    install, nb_cores, obj_directory, prefix, gcc_directory, target = args
 
     os.chdir(obj_directory)
 
@@ -417,15 +423,15 @@ if __name__ == '__main__':
                         help='Number of CPU cores',
                         type=int, required=False, default=1)
 
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    target_platform = args.arch
-    INSTALL = args.install == 'yes'
-    nb_cpu_cores = args.cores - 1
+    target_platform = arguments.arch
+    INSTALL = arguments.install == 'yes'
+    nb_cpu_cores = arguments.cores - 1
 
     check_headers()
     prepare()
     build_target(target_platform, INSTALL, nb_cpu_cores)
 
-    MSG = 'installed' if args.install == 'yes' else 'built'
+    MSG = 'installed' if arguments.install == 'yes' else 'built'
     print('>>> Cross-compiler for {} is now {}.'.format(target_platform, MSG))

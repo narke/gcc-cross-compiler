@@ -37,6 +37,8 @@
 import os
 import sys
 import ftplib
+import shutil
+import pathlib
 import tarfile
 import hashlib
 import tempfile
@@ -220,22 +222,14 @@ def set_target_from_platform(platform):
 def cleanup_dir(path):
     """Remove a directory ecursively."""
     if os.path.isdir(path):
-        try:
-            subprocess.check_call(['rm', '-rf', path])
-        except subprocess.CalledProcessError:
-            print('Error: Problem while removing {}'.format(path))
-            sys.exit()
+        shutil.rmtree(path)
 
 
 def create_dir(path):
     """Create a directory within a given path."""
     if not os.path.isdir(path):
-        try:
-            print(path)
-            subprocess.check_call(['mkdir', '-p', path])
-        except subprocess.CalledProcessError:
-            print('Error: Problem while creating {}'.format(path))
-            sys.exit()
+        print(path)
+        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def unpack_tarball(tarball):

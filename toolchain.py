@@ -232,7 +232,7 @@ def cleanup_dir(path):
 def create_dir(path):
     """Create a directory within a given path."""
     if not os.path.isdir(path):
-        print(path)
+        print('>>> Creating directory: {}'.format(path))
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
@@ -248,11 +248,10 @@ def cleanup_previous_build(install, prefix, work_directory, obj_directory):
     print('>>> Removing previous content')
     if install:
         cleanup_dir(prefix)
+        create_dir(prefix)
+
     cleanup_dir(work_directory)
     create_dir(work_directory)
-
-    if install:
-        create_dir(prefix)
     create_dir(obj_directory)
 
 
@@ -282,6 +281,7 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
         sys.exit()
 
     os.environ['CFLAGS'] = '-Wno-error'
+
     try:
         subprocess.check_call(['make', '-j', str(nb_cores), 'all'])
     except subprocess.CalledProcessError:

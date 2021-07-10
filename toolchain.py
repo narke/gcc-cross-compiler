@@ -47,9 +47,9 @@ import subprocess
 
 
 # Toolchain versions
-BINUTILS_VERSION = '2.34'
-GCC_VERSION = '10.2.0'
-GDB_VERSION = '9.2'
+BINUTILS_VERSION = '2.36'
+GCC_VERSION = '11.1.0'
+GDB_VERSION = '10.2'
 
 BASEDIR = os.getcwd()
 BINUTILS_TARBALL = 'binutils-{}.tar.xz'.format(BINUTILS_VERSION)
@@ -58,9 +58,9 @@ GDB_TARBALL = 'gdb-{}.tar.xz'.format(GDB_VERSION)
 
 INSTALL_DIR = BASEDIR + '/PKG'
 
-BINUTILS_CHECKSUM = '664ec3a2df7805ed3464639aaae332d6'
-GCC_CHECKSUM = 'e9fd9b1789155ad09bcf3ae747596b50'
-GDB_CHECKSUM = 'db95524e554870209ab7d9f8fd8dc557'
+BINUTILS_CHECKSUM = 'f6114b8c40096f9aa9f64fe1ab8ba087'
+GCC_CHECKSUM = '77f6252be0861ab918042acf42bc10ff'
+GDB_CHECKSUM = 'c044b7146903ec51c9d2337a29aee93b'
 
 GMP_MAIN = """
 #define GCC_GMP_VERSION_NUM(a, b, c) \
@@ -345,7 +345,8 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
     os.chdir(gdb_directory)
 
     try:
-        subprocess.check_call(['./configure', '--target={}'.format(target),
+        subprocess.check_call(['./configure',
+                               '--target={}'.format(target),
                                '--prefix={}'.format(prefix),
                                '--program-prefix={}-'.format(target),
                                '--enable-werror=no'])

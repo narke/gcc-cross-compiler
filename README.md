@@ -4,6 +4,7 @@ Supported architectures:
 
         Cross-compiler toolchain build script
         Possible target platforms are:
+	 aarch64    ARM64
          amd64      AMD64 (x86-64, x64)
          arm32      ARM
          ia32       IA-32 (x86, i386)

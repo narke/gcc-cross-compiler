@@ -2,6 +2,7 @@
 """ Cross-compiler toolchain build script
 
     Possible target platforms are:
+     aarch64    ARM64
      amd64      AMD64 (x86-64, x64)
      arm32      ARM
      ia32       IA-32 (x86, i386)
@@ -91,6 +92,7 @@ isl_ctx_get_max_operations (isl_ctx_alloc ());
 """
 
 TARGETS = {
+    'aarch64': 'aarch64-linux-gnu',
     'amd64': 'amd64-linux-gnu',
     'arm32': 'arm-linux-gnueabi',
     'ia32': 'i686-pc-linux-gnu',
@@ -410,9 +412,9 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arch',
                         help='Target architecture',
                         type=str,
-                        choices=['amd64', 'arm32', 'ia32', 'ia64', 'mips32',
-                                 'mips32eb', 'mips64', 'ppc32', 'ppc64',
-                                 'sparc32', 'sparc64'],
+                        choices=['aarch64', 'amd64', 'arm32', 'ia32', 'ia64',
+                                 'mips32', 'mips32eb', 'mips64', 'ppc32',
+                                 'ppc64', 'sparc32', 'sparc64'],
                         required=True)
     parser.add_argument('-i', '--install',
                         help='Install in /usr/local/cross or just '

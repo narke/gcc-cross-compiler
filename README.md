@@ -16,6 +16,7 @@ Supported architectures:
          ppc64      64-bit PowerPC
          sparc32    SPARC V8
          sparc64    SPARC V9
+         lm32       LatticeMico32
 
         The toolchain is installed into directory specified by the
         CROSS_PREFIX environment variable. If the variable is not

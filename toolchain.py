@@ -14,6 +14,7 @@
      ppc64      64-bit PowerPC
      sparc32    SPARC V8
      sparc64    SPARC V9
+     lm32       LatticeMico32
 
     The toolchain is installed into directory specified by the
     CROSS_PREFIX environment variable. If the variable is not
@@ -103,7 +104,8 @@ TARGETS = {
     'ppc32': 'ppc-linux-gnu',
     'ppc64': 'ppc64-linux-gnu',
     'sparc32': 'sparc-leon3-linux-gnu',
-    'sparc64': 'sparc64-linux-gnu'
+    'sparc64': 'sparc64-linux-gnu',
+    'lm32': 'lm32-elf'
 }
 
 
@@ -414,7 +416,7 @@ if __name__ == '__main__':
                         type=str,
                         choices=['aarch64', 'amd64', 'arm32', 'ia32', 'ia64',
                                  'mips32', 'mips32eb', 'mips64', 'ppc32',
-                                 'ppc64', 'sparc32', 'sparc64'],
+                                 'ppc64', 'sparc32', 'sparc64', 'lm32'],
                         required=True)
     parser.add_argument('-i', '--install',
                         help='Install in /usr/local/cross or just '

@@ -5,6 +5,7 @@
      aarch64    ARM64
      amd64      AMD64 (x86-64, x64)
      arm32      ARM
+     armhf      ARM hard float
      ia32       IA-32 (x86, i386)
      ia64       IA-64 (Itanium)
      mips32     MIPS little-endian 32b
@@ -96,6 +97,7 @@ TARGETS = {
     'aarch64': 'aarch64-linux-gnu',
     'amd64': 'amd64-linux-gnu',
     'arm32': 'arm-linux-gnueabi',
+    'armhf': 'arm-linux-gnueabihf',
     'ia32': 'i686-pc-linux-gnu',
     'ia64': 'ia64-pc-linux-gnu',
     'mips32': 'mipsel-linux-gnu',
@@ -433,7 +435,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arch',
                         help='Target architecture',
                         type=str,
-                        choices=['aarch64', 'amd64', 'arm32', 'ia32', 'ia64',
+                        choices=['aarch64', 'amd64', 'arm32', 'armhf', 'ia32', 'ia64',
                                  'mips32', 'mips32eb', 'mips64', 'ppc32',
                                  'ppc64', 'sparc32', 'sparc64', 'lm32'],
                         required=True)

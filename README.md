@@ -7,6 +7,7 @@ Supported architectures:
          aarch64    ARM64
          amd64      AMD64 (x86-64, x64)
          arm32      ARM
+         armhf      ARM hard float
          ia32       IA-32 (x86, i386)
          ia64       IA-64 (Itanium)
          mips32     MIPS little-endian 32b

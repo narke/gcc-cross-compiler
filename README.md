@@ -28,6 +28,8 @@ Supported architectures:
         copies the files into PKG/ subdirectory without affecting
         the actual root file system. That is only useful if you do
         not want to run the script under the super user.
+        
+        If '--enable-cxx' is present, C++ tools (e. g. g++) are built.
     
 
 # Dependencies to install on Debian-based distros
@@ -41,7 +43,11 @@ Supported architectures:
 
      ./toolchain.py --arch ppc32 --install no --cores 4
 
-**Example 2:**  Build and install a cross-compiler for 32-bit ARM (default install directory is
+**Example 2:** Build a cross-compiler for 64-bit ARM with C++ support using 4 cores without installing:
+
+     ./toolchain.py --arch aarch64 --install no --cores 4 --enable-cxx
+
+**Example 3:**  Build and install a cross-compiler for 32-bit ARM (default install directory is
 /usr/local/cross, specify another one by exporting CROSS_PREFIX environment
 variable), note that you need 'sudo' to install:
 

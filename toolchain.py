@@ -334,7 +334,7 @@ def build_gcc(*args):
     languages = 'c'
 
     if enable_cxx:
-        languages += ',cxx'
+        languages += ',c++'
 
     os.chdir(obj_directory)
 

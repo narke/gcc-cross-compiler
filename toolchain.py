@@ -133,11 +133,11 @@ def check_header(dependency, header, body):
     filename.write(code.encode())
 
     try:
-        subprocess.check_call(['cc', '-c', '-o', '{}.o'.format(filename.name[:-2]),
-                               '{}'.format(filename.name)])
-        os.unlink('{}.o'.format(filename.name[:-2]))
+        subprocess.check_call(['cc', '-c', '-o', f'{filename.name[:-2]}.o',
+                               f'{filename.name}'])
+        os.unlink(f'{filename.name[:-2]}.o')
     except subprocess.CalledProcessError:
-        logger.error('{0} of {1} not found'.format(header, dependency))
+        logger.error(f'{header} of {dependency} not found')
         sys.exit()
 
 
@@ -177,19 +177,19 @@ def show_dependencies():
 def download(toolname, tarball):
     """Downlaod a source archive."""
     if toolname == 'gcc':
-        path = '/gnu/gcc/gcc-{}/'.format(GCC_VERSION)
+        path = f'/gnu/gcc/gcc-{GCC_VERSION}/'
     else:
-        path = '/gnu/{}/'.format(toolname)
+        path = f'/gnu/{toolname}/'
 
     try:
         ftp = ftplib.FTP('ftp.gnu.org')
         ftp.login()
         ftp.cwd(path)
-        with open('{}'.format(tarball), 'wb') as ftpfile:
-            ftp.retrbinary('RETR {}'.format(tarball), ftpfile.write)
+        with open(f'{tarball}', 'wb') as ftpfile:
+            ftp.retrbinary(f'RETR {tarball}', ftpfile.write)
         ftp.quit()
     except ftplib.all_errors:
-        logger.error('Error: Downoad of {} failed'.format(tarball))
+        logger.error(f'Error: Downoad of {tarball} failed')
         sys.exit()
 
 
@@ -197,7 +197,7 @@ def check_integrity(archive, checksum):
     """Check the md5 checksum of a tarball."""
     with open(archive, 'rb') as tarball:
         if hashlib.md5(tarball.read()).hexdigest() != checksum:
-            logger.error('Error: Wrong checksum for {}'.format(archive))
+            logger.error(f'Error: Wrong checksum for {tarball}')
             sys.exit()
 
 
@@ -244,7 +244,7 @@ def cleanup_dir(path):
 def create_dir(path):
     """Create a directory within a given path."""
     if not os.path.isdir(path):
-        logger.info('>>> Creating directory: {}'.format(path))
+        logger.info(f'>>> Creating directory: {path}')
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
@@ -303,9 +303,9 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
     os.chdir(binutils_directory)
 
     try:
-        subprocess.check_call(['./configure', '--target={}'.format(target),
-                               '--prefix={}'.format(prefix),
-                               '--program-prefix={}-'.format(target),
+        subprocess.check_call(['./configure', f'--target={target}',
+                               f'--prefix={prefix}',
+                               f'--program-prefix={target}-',
                                '--disable-nls', '--disable-werror'])
     except subprocess.CalledProcessError:
         logger.error('Error: binutils headers checking failed')
@@ -322,7 +322,7 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
     if install:
         cmd = ['make', 'install']
     else:
-        cmd = ['make', 'install', 'DESTDIR={}'.format(INSTALL_DIR)]
+        cmd = ['make', 'install', f'DESTDIR={INSTALL_DIR}']
 
     try:
         subprocess.check_call(cmd)
@@ -343,12 +343,13 @@ def build_gcc(*args):
     os.chdir(obj_directory)
 
     try:
-        subprocess.check_call(['{}/configure'.format(gcc_directory),
-                               '--target={}'.format(target),
-                               '--prefix={}'.format(prefix),
-                               '--program-prefix={}-'.format(target),
+        subprocess.check_call([f'{gcc_directory}/configure',
+                               f'--target={target}',
+                               f'--prefix={prefix}',
+                               f'--program-prefix={target}-',
                                '--with-gnu-as', '--with-gnu-ld', '--disable-nls',
-                               '--disable-threads', '--enable-languages={}'.format(languages),
+                               '--disable-threads',
+                               f'--enable-languages={languages}',
                                '--disable-multilib', '--disable-libgcj',
                                '--without-headers', '--disable-shared', '--enable-lto',
                                '--disable-werror'])
@@ -365,7 +366,7 @@ def build_gcc(*args):
     if install:
         cmd = ['make', 'install-gcc']
     else:
-        cmd = ['make', 'install-gcc', 'DESTDIR={}'.format(INSTALL_DIR)]
+        cmd = ['make', 'install-gcc', f'DESTDIR={INSTALL_DIR}']
 
     try:
         subprocess.check_call(cmd)
@@ -381,9 +382,9 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
 
     try:
         subprocess.check_call(['./configure',
-                               '--target={}'.format(target),
-                               '--prefix={}'.format(prefix),
-                               '--program-prefix={}-'.format(target),
+                               f'--target={target}',
+                               f'--prefix={prefix}',
+                               f'--program-prefix={target}-',
                                '--enable-werror=no'])
     except subprocess.CalledProcessError:
         logger.error('Error: gdb headers checking failed')
@@ -398,7 +399,7 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
     if install:
         cmd = ['make', 'install']
     else:
-        cmd = ['make', 'install', 'DESTDIR={}'.format(INSTALL_DIR)]
+        cmd = ['make', 'install', f'DESTDIR={INSTALL_DIR}']
 
     try:
         subprocess.check_call(cmd)
@@ -425,8 +426,8 @@ def build_target(platform, install, nb_cores, enable_cxx):
 
     prefix = cross_prefix + platform
 
-    os.environ['PATH'] += ':{0}{1}/bin'.format(INSTALL_DIR, prefix)
-    os.environ['PATH'] += ':{0}/bin'.format(prefix)
+    os.environ['PATH'] += f':{INSTALL_DIR}{prefix}/bin'
+    os.environ['PATH'] += f':{prefix}/bin'
 
     cleanup_previous_build(install, prefix, work_directory, obj_directory)
     unpack_tarballs(work_directory)
@@ -475,4 +476,4 @@ if __name__ == '__main__':
     build_target(target_platform, INSTALL, nb_cpu_cores, enable_cxx)
 
     MSG = 'installed' if arguments.install == 'yes' else 'built'
-    logger.info('>>> Cross-compiler for {} is now {}.'.format(target_platform, MSG))
+    logger.info(f'>>> Cross-compiler for {target_platform} is now {MSG}.')

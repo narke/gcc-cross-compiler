@@ -46,6 +46,7 @@ import shutil
 import pathlib
 import tarfile
 import hashlib
+import logging
 import tempfile
 import argparse
 import subprocess
@@ -112,6 +113,9 @@ TARGETS = {
     'lm32': 'lm32-elf'
 }
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 def check_header(dependency, header, body):
     """Check the presence of a header file needed to compile sources."""
@@ -133,7 +137,7 @@ def check_header(dependency, header, body):
                                '{}'.format(filename.name)])
         os.unlink('{}.o'.format(filename.name[:-2]))
     except subprocess.CalledProcessError:
-        print('{0} of {1} not found'.format(header, dependency))
+        logger.error('{0} of {1} not found'.format(header, dependency))
         sys.exit()
 
 
@@ -167,7 +171,7 @@ def show_dependencies():
     - native C and C++ compiler, assembler and linker
     - native C and C++ standard library with headers"""
 
-    print(message)
+    logger.info(message)
 
 
 def download(toolname, tarball):
@@ -185,7 +189,7 @@ def download(toolname, tarball):
             ftp.retrbinary('RETR {}'.format(tarball), ftpfile.write)
         ftp.quit()
     except ftplib.all_errors:
-        print('Error: Downoad of {} failed'.format(tarball))
+        logger.error('Error: Downoad of {} failed'.format(tarball))
         sys.exit()
 
 
@@ -193,7 +197,7 @@ def check_integrity(archive, checksum):
     """Check the md5 checksum of a tarball."""
     with open(archive, 'rb') as tarball:
         if hashlib.md5(tarball.read()).hexdigest() != checksum:
-            print('Error: Wrong checksum for {}'.format(archive))
+            logger.error('Error: Wrong checksum for {}'.format(archive))
             sys.exit()
 
 
@@ -240,7 +244,7 @@ def cleanup_dir(path):
 def create_dir(path):
     """Create a directory within a given path."""
     if not os.path.isdir(path):
-        print('>>> Creating directory: {}'.format(path))
+        logger.info('>>> Creating directory: {}'.format(path))
         pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
@@ -272,7 +276,7 @@ def unpack_tarball(tarball):
 def cleanup_previous_build(install, prefix, work_directory, obj_directory):
     """Remove files from the previous build."""
 
-    print('>>> Removing previous content')
+    logger.info('>>> Removing previous content')
     if install:
         cleanup_dir(prefix)
         create_dir(prefix)
@@ -285,7 +289,7 @@ def cleanup_previous_build(install, prefix, work_directory, obj_directory):
 def unpack_tarballs(work_directory):
     """Unpack tarballs containing source code."""
 
-    print('>>> Unpacking tarballs')
+    logger.info('>>> Unpacking tarballs')
     os.chdir(work_directory)
 
     unpack_tarball(BASEDIR + '/' + BINUTILS_TARBALL)
@@ -304,7 +308,7 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
                                '--program-prefix={}-'.format(target),
                                '--disable-nls', '--disable-werror'])
     except subprocess.CalledProcessError:
-        print('Error: binutils headers checking failed')
+        logger.error('Error: binutils headers checking failed')
         sys.exit()
 
     os.environ['CFLAGS'] = '-Wno-error'
@@ -312,7 +316,7 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
     try:
         subprocess.check_call(['make', '-j', str(nb_cores), 'all'])
     except subprocess.CalledProcessError:
-        print('Error: binutils compilation failed')
+        logger.error('Error: binutils compilation failed')
         sys.exit()
 
     if install:
@@ -323,7 +327,7 @@ def build_binutils(install, nb_cores, binutils_directory, target, prefix):
     try:
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError:
-        print('Error: binutils installation failed ')
+        logger.error('Error: binutils installation failed ')
         sys.exit()
 
 
@@ -349,13 +353,13 @@ def build_gcc(*args):
                                '--without-headers', '--disable-shared', '--enable-lto',
                                '--disable-werror'])
     except subprocess.CalledProcessError:
-        print('Error: gcc headers checking failed')
+        logger.error('Error: gcc headers checking failed')
         sys.exit()
 
     try:
         subprocess.check_call(['make', '-j', str(nb_cores), 'all-gcc'])
     except subprocess.CalledProcessError:
-        print('Error: gcc compilation failed')
+        logger.error('Error: gcc compilation failed')
         sys.exit()
 
     if install:
@@ -366,7 +370,7 @@ def build_gcc(*args):
     try:
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError:
-        print('Error: gcc installation failed')
+        logger.error('Error: gcc installation failed')
         sys.exit()
 
 
@@ -382,13 +386,13 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
                                '--program-prefix={}-'.format(target),
                                '--enable-werror=no'])
     except subprocess.CalledProcessError:
-        print('Error: gdb headers checking failed')
+        logger.error('Error: gdb headers checking failed')
         sys.exit()
 
     try:
         subprocess.check_call(['make', '-j', str(nb_cores), 'all'])
     except subprocess.CalledProcessError:
-        print('Error: gdb compilation failed')
+        logger.error('Error: gdb compilation failed')
         sys.exit()
 
     if install:
@@ -399,7 +403,7 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
     try:
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError:
-        print('Error: gdb installatior failed')
+        logger.error('Error: gdb installatior failed')
         sys.exit()
 
 
@@ -432,7 +436,7 @@ def build_target(platform, install, nb_cores, enable_cxx):
     build_gdb(install, nb_cores, gdb_directory, target, prefix)
 
     os.chdir(BASEDIR)
-    print('>>> Cleaning up')
+    logger.info('>>> Cleaning up')
     cleanup_dir(work_directory)
 
 
@@ -471,4 +475,4 @@ if __name__ == '__main__':
     build_target(target_platform, INSTALL, nb_cpu_cores, enable_cxx)
 
     MSG = 'installed' if arguments.install == 'yes' else 'built'
-    print('>>> Cross-compiler for {} is now {}.'.format(target_platform, MSG))
+    logger.info('>>> Cross-compiler for {} is now {}.'.format(target_platform, MSG))

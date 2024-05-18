@@ -27,9 +27,10 @@
     the actual root file system. That is only useful if you do
     not want to run the script under the super user.
 
-    If '--enable-cxx' is present, C++ tools (e. g. g++) are built."""
+    If '--enable-cxx' is present, C++ tools (e. g. g++) are built.
+"""
 
-# Copyright (c) 2016-2020 Konstantin Tcholokachvili
+# Copyright (c) 2016-2024 Konstantin Tcholokachvili
 # All rights reserved.
 #
 # Use of this source code is governed by a BSD-style license that can be
@@ -62,7 +63,7 @@ BINUTILS_TARBALL = f'binutils-{BINUTILS_VERSION}.tar.xz'
 GCC_TARBALL = f'gcc-{GCC_VERSION}.tar.xz'
 GDB_TARBALL = f'gdb-{GDB_VERSION}.tar.xz'
 
-INSTALL_DIR = BASEDIR + '/PKG'
+INSTALL_DIR = f'{BASEDIR}/PKG'
 
 BINUTILS_CHECKSUM = 'a075178a9646551379bfb64040487715'
 GCC_CHECKSUM = '24195dca80ded5e0551b533f46a4481d'
@@ -292,9 +293,9 @@ def unpack_tarballs(work_directory):
     logger.info('>>> Unpacking tarballs')
     os.chdir(work_directory)
 
-    unpack_tarball(BASEDIR + '/' + BINUTILS_TARBALL)
-    unpack_tarball(BASEDIR + '/' + GCC_TARBALL)
-    unpack_tarball(BASEDIR + '/' + GDB_TARBALL)
+    unpack_tarball(f'{BASEDIR}/{BINUTILS_TARBALL}')
+    unpack_tarball(f'{BASEDIR}/{GCC_TARBALL}')
+    unpack_tarball(f'{BASEDIR}/{GDB_TARBALL}')
 
 
 def build_binutils(install, nb_cores, binutils_directory, target, prefix):
@@ -411,11 +412,11 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
 def build_target(platform, install, nb_cores, enable_cxx):
     """Cross-compile gcc toolchain for a given architecture."""
 
-    work_directory = BASEDIR + '/' + platform
-    binutils_directory = work_directory + '/binutils-' + BINUTILS_VERSION
-    gcc_directory = work_directory + '/gcc-' + GCC_VERSION
-    obj_directory = work_directory + '/gcc-obj'
-    gdb_directory = work_directory + '/gdb-' + GDB_VERSION
+    work_directory = f'{BASEDIR}/{platform}'
+    binutils_directory = f'{work_directory}/binutils-{BINUTILS_VERSION}'
+    gcc_directory = f'{work_directory}/gcc-{GCC_VERSION}'
+    obj_directory = f'{work_directory}/gcc-obj'
+    gdb_directory = f'{work_directory}/gdb-{GDB_VERSION}'
 
     target = set_target_from_platform(platform)
 
@@ -424,7 +425,7 @@ def build_target(platform, install, nb_cores, enable_cxx):
     else:
         cross_prefix = '/usr/local/cross/'
 
-    prefix = cross_prefix + platform
+    prefix = f'{cross_prefix}{platform}'
 
     os.environ['PATH'] += f':{INSTALL_DIR}{prefix}/bin'
     os.environ['PATH'] += f':{prefix}/bin'
@@ -467,13 +468,13 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
 
     target_platform = arguments.arch
-    INSTALL = arguments.install == 'yes'
+    install = arguments.install == 'yes'
     nb_cpu_cores = arguments.cores - 1
     enable_cxx=arguments.enable_cxx
 
     check_headers()
     prepare()
-    build_target(target_platform, INSTALL, nb_cpu_cores, enable_cxx)
+    build_target(target_platform, install, nb_cpu_cores, enable_cxx)
 
-    MSG = 'installed' if arguments.install == 'yes' else 'built'
-    logger.info(f'>>> Cross-compiler for {target_platform} is now {MSG}.')
+    msg = 'installed' if arguments.install == 'yes' else 'built'
+    logger.info(f'>>> Cross-compiler for {target_platform} is now {msg}.')

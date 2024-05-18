@@ -39,13 +39,15 @@ Supported architectures:
 
 # Building
 
-**Example 1:** Build a cross-compiler for 32-bit PowerPC using 4 cores without installing:
+All currently available cpu cores are detected and used to build as faster as possible.
 
-     ./toolchain.py --arch ppc32 --install no --cores 4
+**Example 1:** Build a cross-compiler for 32-bit PowerPC without installing:
 
-**Example 2:** Build a cross-compiler for 64-bit ARM with C++ support using 4 cores without installing:
+     ./toolchain.py --arch ppc32 --install no
 
-     ./toolchain.py --arch aarch64 --install no --cores 4 --enable-cxx
+**Example 2:** Build a cross-compiler for 64-bit ARM with C++ support without installing:
+
+     ./toolchain.py --arch aarch64 --install no --enable-cxx
 
 **Example 3:**  Build and install a cross-compiler for 32-bit ARM (default install directory is
 /usr/local/cross, specify another one by exporting CROSS_PREFIX environment

@@ -457,10 +457,6 @@ if __name__ == '__main__':
                         type=str,
                         choices=['yes', 'no'],
                         required=True)
-    parser.add_argument('-c', '--cores',
-                        help='Number of CPU cores',
-                        type=int, required=False, default=1)
-
     parser.add_argument('--enable-cxx',
                         help='Build tools for C++ (g++, etc.)',
                         action='store_true')
@@ -469,7 +465,7 @@ if __name__ == '__main__':
 
     target_platform = arguments.arch
     install = arguments.install == 'yes'
-    nb_cpu_cores = arguments.cores - 1
+    nb_cpu_cores = len(os.sched_getaffinity(0)) # Get currently available cpu cores
     enable_cxx=arguments.enable_cxx
 
     check_headers()

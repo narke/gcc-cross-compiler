@@ -274,7 +274,7 @@ def unpack_tarball(tarball):
         safe_extract(tar, ".")
 
 
-def cleanup_previous_build(install, prefix, work_directory, obj_directory):
+def cleanup_previous_build(install, prefix, working_directory, obj_directory):
     """Remove files from the previous build."""
 
     logger.info('>>> Removing previous content')
@@ -282,16 +282,16 @@ def cleanup_previous_build(install, prefix, work_directory, obj_directory):
         cleanup_dir(prefix)
         create_dir(prefix)
 
-    cleanup_dir(work_directory)
-    create_dir(work_directory)
+    cleanup_dir(working_directory)
+    create_dir(working_directory)
     create_dir(obj_directory)
 
 
-def unpack_tarballs(work_directory):
+def unpack_tarballs(working_directory):
     """Unpack tarballs containing source code."""
 
     logger.info('>>> Unpacking tarballs')
-    os.chdir(work_directory)
+    os.chdir(working_directory)
 
     unpack_tarball(f'{BASEDIR}/{BINUTILS_TARBALL}')
     unpack_tarball(f'{BASEDIR}/{GCC_TARBALL}')
@@ -412,26 +412,23 @@ def build_gdb(install, nb_cores, gdb_directory, target, prefix):
 def build_target(platform, install, nb_cores, enable_cxx):
     """Cross-compile gcc toolchain for a given architecture."""
 
-    work_directory = f'{BASEDIR}/{platform}'
-    binutils_directory = f'{work_directory}/binutils-{BINUTILS_VERSION}'
-    gcc_directory = f'{work_directory}/gcc-{GCC_VERSION}'
-    obj_directory = f'{work_directory}/gcc-obj'
-    gdb_directory = f'{work_directory}/gdb-{GDB_VERSION}'
+    working_directory = f'{BASEDIR}/{platform}'
+    binutils_directory = f'{working_directory}/binutils-{BINUTILS_VERSION}'
+    gcc_directory = f'{working_directory}/gcc-{GCC_VERSION}'
+    obj_directory = f'{working_directory}/gcc-obj'
+    gdb_directory = f'{working_directory}/gdb-{GDB_VERSION}'
 
     target = set_target_from_platform(platform)
 
-    if os.environ.get('CROSS_PREFIX'):
-        cross_prefix = os.environ['CROSS_PREFIX']
-    else:
-        cross_prefix = '/usr/local/cross/'
+    cross_prefix = os.environ.get('CROSS_PREFIX', '/usr/local/cross')
 
     prefix = f'{cross_prefix}{platform}'
 
     os.environ['PATH'] += f':{INSTALL_DIR}{prefix}/bin'
     os.environ['PATH'] += f':{prefix}/bin'
 
-    cleanup_previous_build(install, prefix, work_directory, obj_directory)
-    unpack_tarballs(work_directory)
+    cleanup_previous_build(install, prefix, working_directory, obj_directory)
+    unpack_tarballs(working_directory)
 
     build_binutils(install, nb_cores, binutils_directory, target, prefix)
     build_gcc(install, nb_cores, obj_directory, prefix, gcc_directory, target, enable_cxx)
@@ -439,7 +436,7 @@ def build_target(platform, install, nb_cores, enable_cxx):
 
     os.chdir(BASEDIR)
     logger.info('>>> Cleaning up')
-    cleanup_dir(work_directory)
+    cleanup_dir(working_directory)
 
 
 if __name__ == '__main__':
